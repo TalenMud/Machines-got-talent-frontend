@@ -1,121 +1,159 @@
-import { useState } from 'react'
-import BracketBettingSection from '../components/BracketBettingSection'
-import StageRoundSection from '../components/StageRoundSection'
-import { bracketRounds, stageMatch } from '../data/mock'
-import type { BetSlip, GameStatus } from '../types'
+import { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { useGameWebSocket } from "../hooks/useGameWebSocket";
 
-type PlayboardPageProps = {
-  status: GameStatus
-  onTokenDelta: (delta: number) => void
-}
+export default function PlayboardPage() {
+  const [searchParams] = useSearchParams();
+  const lobbyCode = searchParams.get("lobby") || "";
+  const navigate = useNavigate();
+  const { messages, status: wsStatus, sendMessage } = useGameWebSocket(lobbyCode);
 
-export default function PlayboardPage({ status, onTokenDelta }: PlayboardPageProps) {
-  const [phase, setPhase] = useState<'betting' | 'stage' | 'payout'>('betting')
-  const [bet, setBet] = useState<BetSlip | null>(null)
-  const [payout, setPayout] = useState<number | null>(null)
+  const [gameState, setGameState] = useState<any>(null);
+  const [phase, setPhase] = useState<"draft" | "round" | "finished">("draft");
+  const [jokes, setJokes] = useState<Record<string, string>>({});
 
-  const handlePlaceBet = (newBet: BetSlip) => {
-    setBet(newBet)
-    onTokenDelta(-newBet.amount)
-    setPayout(null)
-    setPhase('stage')
-  }
+  useEffect(() => {
+    if (messages.length === 0) return;
+    const lastMessage = messages[messages.length - 1];
 
-  const handleResolveMatch = (winnerId: string) => {
-    if (!bet) return
-    const won = bet.competitorId === winnerId
-    const winnings = won ? Math.round(bet.amount * 1.8) : 0
-    if (winnings > 0) {
-      onTokenDelta(winnings)
+    switch (lastMessage.event) {
+      case "game:start":
+      case "game:draft_update":
+        setPhase("draft");
+        setGameState((prev: any) => ({ ...prev, ...lastMessage.data }));
+        break;
+      case "game:round_start":
+        setPhase("round");
+        setJokes({});
+        setGameState((prev: any) => ({ ...prev, ...lastMessage.data }));
+        break;
+      case "game:joke":
+        setJokes(prev => ({
+          ...prev,
+          [lastMessage.data.ai_id]: lastMessage.data.joke
+        }));
+        break;
+      case "game:round_result":
+        setGameState((prev: any) => ({ ...prev, ...lastMessage.data }));
+        break;
+      case "game:end":
+        setPhase("finished");
+        setGameState((prev: any) => ({ ...prev, ...lastMessage.data }));
+        break;
     }
-    setPayout(winnings)
-    setPhase('payout')
+  }, [messages]);
+
+  const handleDraftPick = (aiId: string) => {
+    sendMessage("game:draft_pick", { ai_id: aiId });
+  };
+
+  const handleVote = (aiId: string, type: "buzzer" | "golden_buzzer") => {
+    sendMessage("game:vote", { ai_id: aiId, vote_type: type });
+  };
+
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+  if (!lobbyCode) {
+    return (
+      <div className="page">
+        <div className="panel">
+          <h3>No Lobby Selected</h3>
+          <p>Please go to the Lobby page and create or join a room first.</p>
+          <button className="cta" onClick={() => navigate("/lobby")}>Go to Lobby</button>
+        </div>
+      </div>
+    );
   }
 
-  const resetRound = () => {
-    setBet(null)
-    setPayout(null)
-    setPhase('betting')
-  }
+  if (wsStatus === "connecting") return <div className="page">Connecting to game lobby "{lobbyCode}"...</div>;
+  if (wsStatus === "closed") return <div className="page">Disconnected. Please try joining the lobby again.</div>;
 
   return (
     <div className="page">
       <div className="page-intro">
         <div>
-          <p className="eyebrow">Playboard</p>
-          <h2>Bracket bets, stage battles, and buzzer chaos.</h2>
+          <p className="eyebrow">Lobby: {lobbyCode}</p>
+          <h2>{phase === "draft" ? "Draft Your AI" : phase === "round" ? "On Stage" : "Game Finished"}</h2>
         </div>
-        <span className="tag">Round {status.round}</span>
-      </div>
-      <div className="phase-tabs">
-        <button
-          className={`phase-tab${phase === 'betting' ? ' active' : ''}`}
-          type="button"
-          onClick={() => setPhase('betting')}
-        >
-          1. Betting
-        </button>
-        <button
-          className={`phase-tab${phase === 'stage' ? ' active' : ''}`}
-          type="button"
-          onClick={() => setPhase('stage')}
-          disabled={!bet}
-        >
-          2. On Stage
-        </button>
-        <button
-          className={`phase-tab${phase === 'payout' ? ' active' : ''}`}
-          type="button"
-          onClick={() => setPhase('payout')}
-          disabled={!bet}
-        >
-          3. Payout
-        </button>
+        <span className="tag">Phase: {phase}</span>
       </div>
 
-      {phase === 'betting' ? (
-        <BracketBettingSection
-          rounds={bracketRounds}
-          tokens={status.tokens}
-          currentBet={bet}
-          onPlaceBet={handlePlaceBet}
-        />
-      ) : null}
-
-      {phase === 'stage' ? (
-        <StageRoundSection match={stageMatch} bet={bet} onResolveMatch={handleResolveMatch} />
-      ) : null}
-
-      {phase === 'payout' ? (
-        <section className="section">
-          <div className="panel payout-panel">
-            <p className="eyebrow">Bracket Result</p>
-            <h3>
-              {bet
-                ? payout && payout > 0
-                  ? `You won ${payout} tokens.`
-                  : 'Your pick got eliminated. No payout this round.'
-                : 'Place a bet to earn bracket payouts.'}
-            </h3>
-            <p className="card-sub">
-              Winners advance to the next bracket. Place a fresh bet before the
-              next head-to-head.
-            </p>
-            <div className="row">
-              <button className="cta" type="button" onClick={resetRound}>
-                Next Bracket
-              </button>
-              <button
-                className="ghost"
-                type="button"
-                onClick={resetRound}
-              >
-                Adjust Bet
-              </button>
-            </div>
+      {phase === "draft" && (
+        <div className="panel">
+          <h3>AI Draft</h3>
+          <p>Next to pick: {gameState?.next_picker || "Waiting..."}</p>
+          <div className="grid three">
+            {gameState?.ai_comedians?.map((ai: any) => {
+               const isPicked = Object.values(gameState?.picks || {}).includes(ai.id);
+               return (
+                <div key={ai.id} className={"card " + (isPicked ? "disabled" : "")}>
+                  <h4>{ai.personality}</h4>
+                  <button
+                    className="cta"
+                    onClick={() => handleDraftPick(ai.id)}
+                    disabled={isPicked || gameState?.next_picker !== currentUser.id}
+                  >
+                    {isPicked ? "Picked" : "Pick Agent"}
+                  </button>
+                </div>
+              );
+            })}
           </div>
-        </section>
-      ) : null}
+        </div>
+      )}
+
+      {phase === "round" && (
+        <div className="panel">
+          <h3>Round {gameState?.round}</h3>
+          <div className="matchups">
+            {gameState?.matchups?.map((m: any, idx: number) => {
+               const ai1Obj = gameState?.ai_comedians?.[m.ai1] || { personality: m.ai1 };
+               const ai2Obj = m.ai2 ? (gameState?.ai_comedians?.[m.ai2] || { personality: m.ai2 }) : null;
+
+               return (
+                 <div key={idx} className="matchup-card panel">
+                    <div className="grid two">
+                      <div className="performer-side">
+                        <h4>{ai1Obj.personality}</h4>
+                        <p className="joke-text">{jokes[m.ai1] || "Thinking of a joke..."}</p>
+                        <div className="row">
+                          <button className="ghost" onClick={() => handleVote(m.ai1, "buzzer")}>Buzzer (-1)</button>
+                          <button className="cta" onClick={() => handleVote(m.ai1, "golden_buzzer")}>Golden (+2)</button>
+                        </div>
+                      </div>
+
+                      {ai2Obj ? (
+                        <div className="performer-side">
+                          <h4>{ai2Obj.personality}</h4>
+                          <p className="joke-text">{jokes[m.ai2] || "Thinking of a joke..."}</p>
+                          <div className="row">
+                            <button className="ghost" onClick={() => handleVote(m.ai2, "buzzer")}>Buzzer (-1)</button>
+                            <button className="cta" onClick={() => handleVote(m.ai2, "golden_buzzer")}>Golden (+2)</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="performer-side">
+                          <h4>BYE</h4>
+                          <p>This agent advances automatically.</p>
+                        </div>
+                      )}
+                    </div>
+                 </div>
+               );
+            })}
+          </div>
+        </div>
+      )}
+
+      {phase === "finished" && (
+        <div className="panel">
+          <h3>Tournament Winner</h3>
+          <div className="winner-highlight">
+            <h2>{gameState?.winner_ai}</h2>
+            <p>Congratulations! Tokens have been rewarded to all survivors.</p>
+          </div>
+        </div>
+      )}
     </div>
-  )
+  );
 }

@@ -1,20 +1,35 @@
-import { Link, NavLink, useNavigate } from 'react-router-dom'
-import type { GameStatus } from '../types'
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 const navItems = [
-  { label: 'Lobby', to: '/lobby' },
-  { label: 'Playboard', to: '/playboard' },
-  { label: 'Showdown', to: '/showdown' },
-  { label: 'Leaderboard', to: '/leaderboard' },
-  { label: 'Rewards', to: '/rewards' },
-]
+  { label: "Lobby", to: "/lobby" },
+  { label: "Playboard", to: "/playboard" },
+  { label: "Showdown", to: "/showdown" },
+  { label: "Leaderboard", to: "/leaderboard" },
+  { label: "Rewards", to: "/rewards" },
+];
 
-type AppHeaderProps = {
-  status: GameStatus
-}
+export default function AppHeader({ status }: { status?: any }) {
+  const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
 
-export default function AppHeader({ status }: AppHeaderProps) {
-  const navigate = useNavigate()
+  useEffect(() => {
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      try {
+        setUser(JSON.parse(userData));
+      } catch (e) {
+        console.error("Failed to parse user data", e);
+      }
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+    navigate("/login");
+  };
 
   return (
     <header className="app-header">
@@ -29,28 +44,23 @@ export default function AppHeader({ status }: AppHeaderProps) {
         {navItems.map((item) => (
           <NavLink
             key={item.to}
-            className={({ isActive }) =>
-              `nav-pill${isActive ? ' active' : ''}`
-            }
+            className={({ isActive }) => (isActive ? "nav-pill active" : "nav-pill")}
             to={item.to}
           >
             {item.label}
           </NavLink>
         ))}
       </nav>
-      <div className="header-meta">
-        <div>
-          <p className="meta-label">Room Code</p>
-          <p className="meta-value">{status.roomCode}</p>
-        </div>
-        <div>
-          <p className="meta-label">Host</p>
-          <p className="meta-value">{status.host}</p>
-        </div>
-        <button className="cta" type="button" onClick={() => navigate('/playboard')}>
-          Start Round
-        </button>
+      <div className="user-section">
+        {user ? (
+          <div className="row">
+            <span style={{ marginRight: "10px" }}>{user.username}</span>
+            <button className="ghost" onClick={handleLogout}>Logout</button>
+          </div>
+        ) : (
+          <Link to="/login" className="nav-pill">Login</Link>
+        )}
       </div>
     </header>
-  )
+  );
 }

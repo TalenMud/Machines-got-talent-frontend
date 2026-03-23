@@ -1,12 +1,21 @@
-import RewardsSection from '../components/RewardsSection'
-import { rewards } from '../data/mock'
+import RewardsSection, { type Reward } from "../components/RewardsSection"
+import { useState } from "react"
 
-type RewardsPageProps = {
-  tokens: number
-  onSpendTokens: (amount: number) => void
-}
+const initialRewards: Reward[] = [
+  { id: "1", title: "First Pick", description: "Get the very first choice in the next AI draft.", cost: 50, owned: false },
+  { id: "2", title: "Double Vote", description: "Your vote counts twice in a single round.", cost: 75, owned: false },
+  { id: "3", title: "Golden Immunity", description: "Protect your AI from one Buzzer penalty.", cost: 100, owned: false },
+  { id: "4", title: "Spy Glass", description: "See other players' picks before they are revealed.", cost: 30, owned: false },
+  { id: "5", title: "Token Boost", description: "Earn 20% more tokens from your next win.", cost: 40, owned: false },
+]
 
-export default function RewardsPage({ tokens, onSpendTokens }: RewardsPageProps) {
+export default function RewardsPage() {
+  const [tokens, setTokens] = useState(100);
+
+  const onSpendTokens = (amount: number) => {
+    setTokens(prev => prev - amount);
+  }
+
   return (
     <div className="page">
       <div className="page-intro">
@@ -14,10 +23,9 @@ export default function RewardsPage({ tokens, onSpendTokens }: RewardsPageProps)
           <p className="eyebrow">Rewards</p>
           <h2>Cash in your wins for round advantages.</h2>
         </div>
-        <span className="tag">Storefront</span>
       </div>
       <RewardsSection
-        initialRewards={rewards}
+        initialRewards={initialRewards}
         initialTokens={tokens}
         onSpendTokens={onSpendTokens}
       />

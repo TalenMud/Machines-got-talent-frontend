@@ -1,58 +1,43 @@
-import { useState } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
-import './App.css'
-import AppHeader from './components/AppHeader'
-import AppFooter from './components/AppFooter'
-import HomePage from './pages/HomePage'
-import LobbyPage from './pages/LobbyPage'
-import PlayboardPage from './pages/PlayboardPage'
-import ShowdownPage from './pages/ShowdownPage'
-import LeaderboardPage from './pages/LeaderboardPage'
-import RewardsPage from './pages/RewardsPage'
-import { gameStatus } from './data/mock'
+import { useState } from "react";
+import { Routes, Route } from "react-router-dom";
+import "./App.css";
+import AppHeader from "./components/AppHeader";
+import HomePage from "./pages/HomePage";
+import LobbyPage from "./pages/LobbyPage";
+import PlayboardPage from "./pages/PlayboardPage";
+import ShowdownPage from "./pages/ShowdownPage";
+import LeaderboardPage from "./pages/LeaderboardPage";
+import RewardsPage from "./pages/RewardsPage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 
 function App() {
-  const [status, setStatus] = useState(gameStatus)
-
-  const handleTokenDelta = (delta: number) => {
-    setStatus((prev) => ({
-      ...prev,
-      tokens: Math.max(0, prev.tokens + delta),
-    }))
-  }
+  const [tokens, setTokens] = useState(100);
 
   const handleSpendTokens = (amount: number) => {
-    handleTokenDelta(-amount)
+    setTokens(prev => Math.max(0, prev - amount));
   }
 
   return (
     <div className="app">
-      <AppHeader status={status} />
+      <AppHeader />
       <main>
         <Routes>
-          <Route path="/" element={<HomePage status={status} />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route path="/lobby" element={<LobbyPage />} />
-          <Route
-            path="/playboard"
-            element={<PlayboardPage status={status} onTokenDelta={handleTokenDelta} />}
-          />
+          <Route path="/playboard" element={<PlayboardPage />} />
           <Route path="/showdown" element={<ShowdownPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
-          <Route
-            path="/rewards"
-            element={
-              <RewardsPage
-                tokens={status.tokens}
-                onSpendTokens={handleSpendTokens}
-              />
-            }
+          <Route 
+            path="/rewards" 
+            element={<RewardsPage />} 
           />
-          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
-      <AppFooter />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
