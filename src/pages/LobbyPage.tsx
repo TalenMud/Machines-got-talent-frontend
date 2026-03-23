@@ -9,6 +9,7 @@ export default function LobbyPage() {
   const fetchLobbies = async () => {
     try {
       const response = await apiFetch<any>("/lobby/list");
+      // The API returns { lobbies: [...] }
       setLobbies(response.lobbies || []);
     } catch (err) {
       console.error("Failed to fetch lobbies:", err);
@@ -21,20 +22,29 @@ export default function LobbyPage() {
     fetchLobbies();
   }, []);
 
-  if (loading) return <div className="page">Loading lobbies...</div>;
+  if (loading) return (
+    <div className="page" style={{ padding: "20px", textAlign: "center" }}>
+      <p className="eyebrow">Production Control</p>
+      <h2>Initializing Studio Lobbies...</h2>
+    </div>
+  );
 
   return (
     <div className="page">
       <div className="page-intro">
         <div>
-          <p className="eyebrow">Lobby</p>
-          <h2>Build the room, pick the players, start the chaos.</h2>
+          <p className="eyebrow">Lobby Management</p>
+          <h2>Comedy Studio Control Room</h2>
+        </div>
+        <div style={{ display: "flex", gap: "1rem" }}>
+           <span className="tag" style={{ background: "var(--navy)", color: "#fff" }}>{lobbies.length} Active Rooms</span>
+           <button className="ghost" onClick={fetchLobbies}>Refresh Feed</button>
         </div>
       </div>
+
       <LobbySection 
-        initialLobbies={lobbies} 
-        initialPlayers={[]} 
-        onRefresh={fetchLobbies} 
+        initialLobbies={lobbies}
+        onRefresh={fetchLobbies}
       />
     </div>
   );
