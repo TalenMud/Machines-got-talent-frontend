@@ -13,6 +13,7 @@ export default function PlayboardPage() {
   const [jokes, setJokes] = useState<Record<string, string>>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showLoading, setShowLoading] = useState(false);
+  const [showCalculationLoading, setShowCalculationLoading] = useState(false);
 
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
 
@@ -43,8 +44,12 @@ export default function PlayboardPage() {
         setGameState((prev: any) => ({ ...prev, ...lastMessage.data }));
         break;
       case "game:end":
-        setPhase("finished");
-        setGameState((prev: any) => ({ ...prev, ...lastMessage.data }));
+        setShowCalculationLoading(true);
+        setTimeout(() => {
+          setShowCalculationLoading(false);
+          setPhase("finished");
+          setGameState((prev: any) => ({ ...prev, ...lastMessage.data }));
+        }, 3000); // Show "Calculating Rewards" for 3 seconds
         break;
     }
   }, [messages]);
@@ -68,12 +73,31 @@ export default function PlayboardPage() {
 
   if (showLoading) {
     return (
-      <div className="page" style={{ 
-        height: "80vh", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center" 
+      <div className="page" style={{
+        height: "80vh", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center"
       }}>
-         <div className="panel" style={{ padding: "4rem", background: "var(--navy)", color: "#fff" }}>
+         <div className="panel" style={{ padding: "4rem", background: "var(--navy)", color: "#fff" }}> 
             <h1 style={{ fontSize: "4rem" }}>ROUND {gameState?.round}</h1>
             <p className="eyebrow" style={{ color: "rgba(255,255,255,0.6)" }}>The Spotlight is moving...</p>
+         </div>
+      </div>
+    );
+  }
+
+  if (showCalculationLoading) {
+    return (
+      <div className="page" style={{
+        height: "80vh", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center"
+      }}>
+         <div className="panel spotlight" style={{
+            padding: "5rem",
+            background: "#fff",
+            border: "4px solid var(--gold)",
+            maxWidth: "600px"
+          }}>
+            <div style={{ fontSize: "4rem", marginBottom: "2rem", animation: "spin 2s linear infinite" }}>⚙️</div>
+            <h2 style={{ fontSize: "2.5rem" }}>Calculating Results</h2>
+            <p className="eyebrow" style={{ color: "var(--gold)", fontWeight: "bold", marginTop: "1rem" }}>Finalizing Token Payouts & Win Counts...</p>
          </div>
       </div>
     );
@@ -89,7 +113,7 @@ export default function PlayboardPage() {
           </h2>
         </div>
         <div style={{ display: "flex", gap: "0.8rem", alignItems: "center" }}>
-           <span className="tag" style={{ background: "var(--navy)", color: "#fff" }}>{phase}</span>
+           <span className="tag" style={{ background: "var(--navy)", color: "#fff" }}>{phase}</span>   
            {isMyTurn && phase === "draft" && <span className="tag" style={{ background: "var(--orange)", color: "#fff" }}>Your Turn</span>}
         </div>
       </div>
@@ -104,13 +128,13 @@ export default function PlayboardPage() {
                const isSelected = selectedId === ai.id;
 
                return (
-                <article 
-                  key={ai.id} 
+                <article
+                  key={ai.id}
                   className={`panel comedian ${isPicked ? "eliminated" : ""} ${isSelected ? "selected" : ""}`}
                   onClick={() => !isPicked && setSelectedId(ai.id)}
-                  style={{ 
+                  style={{
                     cursor: isPicked ? "default" : "pointer",
-                    background: isPicked ? "var(--panel)" : (isSelected ? "#fff" : "var(--panel)")
+                    background: isPicked ? "var(--panel)" : (isSelected ? "#fff" : "var(--panel)")     
                   }}
                 >
                   <div className="comedian-header">
@@ -135,7 +159,7 @@ export default function PlayboardPage() {
                       {isPicked ? (ownerID === currentUser.id ? "Yours" : "Taken") : (isSelected ? "Selected" : "Tap to pick")}
                     </span>
                   </div>
-                  <button className="cta" 
+                  <button className="cta"
                     style={{ width: "100%", padding: "0.6rem", marginTop: "1.2rem" }}
                     disabled={!isMyTurn || isPicked || !isSelected}
                     onClick={(e) => { e.stopPropagation(); handleDraftPick(ai.id); }}
@@ -155,38 +179,70 @@ export default function PlayboardPage() {
             {gameState?.matchups?.map((m: any, idx: number) => {
                const ai1 = aiList.find((a: any) => a.id === m.ai1);
                const ai2 = aiList.find((a: any) => a.id === m.ai2);
-               
+
                const renderCompetitor = (ai: any) => {
                  if (!ai) return <div className="performer-card spotlight" style={{ opacity: 0.5 }}><p className="vs">Bye</p></div>;
                  const isMyAI = ai.id === myAIID;
-                 
+
                  return (
-                   <div className={`performer-card ${isMyAI ? "hold" : ""}`} style={{ 
-                      flex: 1, 
+                   <div className={`performer-card ${isMyAI ? "hold" : ""}`} style={{
+                      flex: 1,
                       position: "relative",
-                      background: isMyAI ? "rgba(31, 42, 68, 0.05)" : "#fff",
-                      border: isMyAI ? "2px dashed var(--navy)" : "1px solid var(--stroke)"
+                      background: isMyAI ? "rgba(235, 77, 75, 0.03)" : "#fff",
+                      border: isMyAI ? "2px solid #eb4d4b" : "1px solid var(--stroke)",
+                      boxShadow: isMyAI ? "0 0 20px rgba(235, 77, 75, 0.4)" : "none",
+                      transition: "all 0.3s ease"
                     }}>
-                     {isMyAI && <div className="tag" style={{ position: "absolute", top: "-12px", right: "10px", background: "var(--navy)", color: "#fff", border: "none" }}>Locked</div>}
+                     {isMyAI && (
+                       <div className="tag" style={{
+                         position: "absolute",
+                         top: "-12px",
+                         right: "10px",
+                         background: "#eb4d4b",
+                         color: "#fff",
+                         border: "none",
+                         fontWeight: "bold",
+                         boxShadow: "0 2px 8px rgba(235, 77, 75, 0.3)"
+                       }}>YOUR AGENT</div>
+                     )}
                      <div className="performer-header">
                         <div className="avatar" style={{ background: ai.color, width: "36px", height: "36px", fontSize: "0.9rem" }}>🤖</div>
                         <div>
-                           <p className="card-title" style={{ fontSize: "0.9rem" }}>{ai.name}</p>
+                           <p className="card-title" style={{ fontSize: "0.9rem" }}>{ai.name}</p>      
                            <p className="card-sub" style={{ fontSize: "0.75rem" }}>{ai.personality}</p>
                         </div>
                      </div>
                      <div style={{ height: "110px", margin: "10px 0", background: "#f8f9fa", borderRadius: "12px", border: "1px solid var(--stroke)", padding: "1rem", overflowY: "auto" }}>
                         <p className="joke" style={{ fontSize: "0.85rem", margin: 0 }}>{jokes[ai.id] || <span style={{ color: "#aaa" }}>Thinking of a punchline...</span>}</p>
                      </div>
+
                      <div className="row" style={{ gap: "0.6rem" }}>
-                        <button className="buzzer bad" 
-                           style={{ flex: 1, padding: "0.8rem", fontWeight: "bold", fontSize: "0.8rem", opacity: isMyAI ? 0.3 : 1 }} 
-                           onClick={() => handleVote(ai.id, "buzzer")} 
-                           disabled={isMyAI}>BUZZ</button>
-                        <button className="buzzer golden" 
-                           style={{ flex: 1, padding: "0.8rem", fontWeight: "bold", fontSize: "0.8rem", opacity: isMyAI ? 0.3 : 1 }} 
-                           onClick={() => handleVote(ai.id, "golden_buzzer")} 
-                           disabled={isMyAI}>GOLDEN</button>
+                        {isMyAI ? (
+                          <div style={{
+                            flex: 1,
+                            padding: "0.8rem",
+                            textAlign: "center",
+                            background: "rgba(11, 31, 42, 0.05)",
+                            borderRadius: "12px",
+                            color: "var(--muted)",
+                            fontSize: "0.75rem",
+                            fontWeight: "bold",
+                            border: "1px solid var(--stroke)"
+                          }}>
+                            VOTING RESTRICTED
+                          </div>
+                        ) : (
+                          <>
+                            <button className="buzzer bad"
+                               style={{ flex: 1, padding: "0.8rem", fontWeight: "bold", fontSize: "0.8rem" }}
+                               onClick={() => handleVote(ai.id, "buzzer")}
+                            >BUZZ</button>
+                            <button className="buzzer golden"
+                               style={{ flex: 1, padding: "0.8rem", fontWeight: "bold", fontSize: "0.8rem" }}
+                               onClick={() => handleVote(ai.id, "golden_buzzer")}
+                            >GOLDEN</button>
+                          </>
+                        )}
                      </div>
                    </div>
                  );
@@ -208,9 +264,9 @@ export default function PlayboardPage() {
 
       {phase === "finished" && (
         <section className="section" style={{ textAlign: "center", alignItems: "center" }}>
-          <div className="panel spotlight" style={{ 
-            padding: "5rem", 
-            maxWidth: "700px", 
+          <div className="panel spotlight" style={{
+            padding: "5rem",
+            maxWidth: "700px",
             background: "linear-gradient(135deg, #fff 0%, #fff8ee 100%)",
             border: "4px solid var(--gold)",
             boxShadow: "0 0 100px rgba(244, 183, 64, 0.4)"
@@ -219,7 +275,7 @@ export default function PlayboardPage() {
              <p className="eyebrow" style={{ color: "var(--gold)", fontWeight: "bold" }}>THE FINAL WINNER</p>
              <h2 style={{ fontSize: "4rem", marginBottom: "0.5rem" }}>{aiList.find((a: any) => a.id === gameState?.winner_ai)?.name}</h2>
              <p className="card-sub" style={{ fontSize: "1.5rem" }}>{aiList.find((a: any) => a.id === gameState?.winner_ai)?.personality}</p>
-             
+
              <div className="row" style={{ justifyContent: "center", marginTop: "4rem", gap: "4rem", borderTop: "1px solid var(--stroke)", paddingTop: "3rem" }}>
                 <div>
                    <p className="eyebrow">Champion Owner</p>

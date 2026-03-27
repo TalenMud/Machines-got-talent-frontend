@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
-import { apiFetch } from "../api/client";
 import { useNavigate } from "react-router-dom";
+import { apiFetch } from "../api/client";
 
 type LobbySectionProps = {
   initialLobbies: any[]
@@ -56,6 +56,9 @@ export default function LobbySection({
           password: draft.password,
         }),
       });
+      
+      // Update local lobbies list so selectedLobby works immediately
+      setLobbies(prev => [response, ...prev]);
       setSelectedLobbyCode(response.code);
       setActivity("Lobby created: " + response.code);
       if (onRefresh) onRefresh();
@@ -64,6 +67,16 @@ export default function LobbySection({
     } finally {
       setLoading(false);
     }
+  };
+
+  const generateRandomName = () => {
+    const names = [
+      "The Punchline Pit", "Studio 404", "Laugh Lab", "The Comedy Console",
+      "Data Dumpster", "Recursive Roasts", "Silicon Standup", "Binary Banter",
+      "Mainframe Mirth", "Gigabyte Gags", "The Neon Narrator", "Synth Satire",
+    ];
+    const randomName = names[Math.floor(Math.random() * names.length)];
+    setDraft(prev => ({ ...prev, name: randomName }));
   };
 
   const handleJoinLobby = async (code: string) => {
