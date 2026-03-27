@@ -113,11 +113,10 @@ export default function LobbySection({
         <button className="ghost" onClick={onRefresh}>Refresh Lobbies</button>
       </div>
 
-      <div className="grid two" style={{ marginTop: "30px", alignItems: "start" }}>
-        {/* LOBBY CREATION */}
+      <div className="grid two lobby-grid">
         <div className="panel">
           <h4>Host a New Room</h4>
-          <div className="form" style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div className="form lobby-form">
              <label>Room Name
                <input value={draft.name} onChange={(e) => handleDraftChange("name", e.target.value)} />
              </label>
@@ -129,21 +128,20 @@ export default function LobbySection({
                  <option value={16}>16 AIs (Grand Finale)</option>
                </select>
              </label>
-             <button className="cta" onClick={handleCreateLobby} disabled={loading} style={{ width: "100%", marginTop: "10px" }}>
+             <button className="cta full-width" onClick={handleCreateLobby} disabled={loading}>
                Generate Lobby
              </button>
           </div>
         </div>
 
-        {/* LOBBY LIST & ACTIONS */}
         <div className="panel">
           <h4>Available Rooms</h4>
-          <div className="lobby-list" style={{ marginTop: "20px", maxHeight: "400px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.8rem" }}>
-            {lobbies.length === 0 && <p style={{ color: "#666", textAlign: "center", padding: "20px" }}>No active rooms found.</p>}
+          <div className="lobby-list">
+            {lobbies.length === 0 && <p className="empty-state">No active rooms found.</p>}
             {lobbies.map((l) => (
-              <div key={l.code} className={`lobby-card ${selectedLobbyCode === l.code ? "active" : ""}`} style={{ cursor: "pointer" }} onClick={() => setSelectedLobbyCode(l.code)}>
+              <div key={l.code} className={`lobby-card ${selectedLobbyCode === l.code ? "active" : ""}`} onClick={() => setSelectedLobbyCode(l.code)}>
                 <div>
-                  <p className="card-title">{l.name} <span style={{ color: "#999", fontSize: "0.8em" }}>#{l.code}</span></p>
+                  <p className="card-title">{l.name} <span className="lobby-code">#{l.code}</span></p>
                   <p className="card-sub">{l.num_comedians} AIs • {l.player_count} Players</p>
                 </div>
                 {selectedLobbyCode !== l.code && <button className="ghost" onClick={(e) => { e.stopPropagation(); handleJoinLobby(l.code); }}>Join</button>}
@@ -153,18 +151,18 @@ export default function LobbySection({
           </div>
 
           {selectedLobbyCode && (
-            <div style={{ marginTop: "20px", paddingTop: "20px", borderTop: "1px solid var(--stroke)" }}>
-               <p className="activity" style={{ marginBottom: "15px", fontWeight: "bold", textAlign: "center" }}>{activity}</p>
+            <div className="panel-divider lobby-selection">
+               <p className="activity activity-center">{activity}</p>
                {isHost ? (
-                 <button className="cta" onClick={startRound} disabled={loading} style={{ width: "100%", background: "var(--navy)" }}>
+                 <button className="cta full-width" onClick={startRound} disabled={loading}>
                    Launch Showdown
                  </button>
                ) : (
-                 <div style={{ textAlign: "center", padding: "10px", background: "var(--panel)", borderRadius: "10px" }}>
-                    <p style={{ color: "var(--muted)", margin: 0 }}>Waiting for host to start...</p>
+                 <div className="waiting-box">
+                    <p>Waiting for host to start...</p>
                  </div>
                )}
-               <button className="ghost" onClick={() => navigate("/playboard?lobby=" + selectedLobbyCode)} style={{ width: "100%", marginTop: "10px" }}>
+               <button className="ghost full-width lobby-jump" onClick={() => navigate("/playboard?lobby=" + selectedLobbyCode)}>
                  Go to Playboard
                </button>
             </div>

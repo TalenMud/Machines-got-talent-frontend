@@ -1,25 +1,64 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@500;600;700;800&display=swap");
 
 :root {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
-  color: #0b1f2a;
-  background-color: #f6f1ea;
+  font-family: "Nunito", sans-serif;
+  color: #2c145b;
+  background-color: #7446e8;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color-scheme: light;
 }
 
 * {
   box-sizing: border-box;
 }
 
+html {
+  min-height: 100%;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
+  overflow-x: clip;
+  position: relative;
   background:
-    radial-gradient(circle at top left, #ffe7c4 0%, transparent 45%),
-    radial-gradient(circle at 80% 20%, #d6f5f1 0%, transparent 50%),
-    #f6f1ea;
+    radial-gradient(circle at 12% 12%, rgba(255, 228, 120, 0.65), transparent 18%),
+    radial-gradient(circle at 88% 10%, rgba(112, 232, 255, 0.6), transparent 20%),
+    radial-gradient(circle at 50% 100%, rgba(255, 117, 200, 0.28), transparent 30%),
+    linear-gradient(180deg, #c7eeff 0%, #ab8cff 9%, #9367ff 40%, #7848ea 68%, #6836dc 100%);
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+body::before {
+  background:
+    radial-gradient(circle at 6% 18%, rgba(255, 255, 255, 0.7) 0 0.18rem, transparent 0.22rem),
+    radial-gradient(circle at 16% 72%, rgba(255, 215, 93, 0.82) 0 0.22rem, transparent 0.26rem),
+    radial-gradient(circle at 32% 34%, rgba(255, 135, 201, 0.78) 0 0.2rem, transparent 0.24rem),
+    radial-gradient(circle at 48% 82%, rgba(76, 231, 213, 0.78) 0 0.2rem, transparent 0.24rem),
+    radial-gradient(circle at 64% 14%, rgba(255, 255, 255, 0.74) 0 0.16rem, transparent 0.2rem),
+    radial-gradient(circle at 78% 56%, rgba(255, 195, 79, 0.8) 0 0.24rem, transparent 0.28rem),
+    radial-gradient(circle at 90% 26%, rgba(128, 214, 255, 0.84) 0 0.22rem, transparent 0.26rem),
+    radial-gradient(circle at 92% 84%, rgba(255, 133, 205, 0.78) 0 0.18rem, transparent 0.22rem);
+  opacity: 0.72;
+}
+
+body::after {
+  background:
+    radial-gradient(circle at 20% 28%, rgba(255, 255, 255, 0.24), transparent 24%),
+    radial-gradient(circle at 80% 18%, rgba(255, 228, 120, 0.18), transparent 26%),
+    radial-gradient(circle at 76% 82%, rgba(255, 117, 200, 0.18), transparent 26%),
+    radial-gradient(circle at 12% 88%, rgba(112, 232, 255, 0.18), transparent 24%);
+  filter: blur(80px);
 }
 
 a {
@@ -29,10 +68,37 @@ a {
 
 button,
 input,
-select {
+select,
+textarea {
   font-family: inherit;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: "Fredoka", sans-serif;
+  letter-spacing: -0.03em;
+}
+
+p {
+  margin: 0;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+::selection {
+  background: rgba(255, 223, 100, 0.45);
+  color: #2c145b;
 }
 
 #root {
   width: 100%;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
 }

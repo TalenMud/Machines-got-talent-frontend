@@ -24,11 +24,12 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="page register-page" style={{ maxWidth: "400px", margin: "40px auto" }}>
-      <div className="panel">
-        <h3>Create Profile</h3>
+    <div className="page auth-page register-page">
+      <div className="panel auth-panel auth-panel--wide">
+        <p className="eyebrow auth-eyebrow">Join the Show</p>
+        <h3 className="auth-title">Create Profile</h3>
         <p className="card-sub">Join the talent pool.</p>
-        <form onSubmit={handleRegister} className="form-grid">
+        <form onSubmit={handleRegister} className="form-grid auth-form register-form">
           <label>
             Username
             <input 
@@ -56,11 +57,11 @@ export default function RegisterPage() {
               required 
             />
           </label>
-          {error && <p className="error" style={{ color: "red", fontSize: "0.8em" }}>{error}</p>}
+          {error && <p className="error auth-inline-error">{error}</p>}
           <button className="cta" type="submit">Register</button>
         </form>
-        <p style={{ marginTop: "20px", fontSize: "0.9em" }}>
-          Already have an account? <Link to="/login">Login</Link>
+        <p className="auth-note">
+          Already have an account? <Link to="/login" className="auth-link">Login</Link>
         </p>
       </div>
     </div>

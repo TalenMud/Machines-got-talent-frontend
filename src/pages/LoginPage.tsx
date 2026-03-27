@@ -30,18 +30,18 @@ export default function LoginPage({ onLogin }: { onLogin: () => void }) {
   };
 
   return (
-    <div className="page" style={{ maxWidth: "400px", margin: "4rem auto" }}>
-      <div className="panel" style={{ padding: "2.5rem" }}>
-        <p className="eyebrow" style={{ textAlign: "center" }}>Welcome Back</p>
-        <h2 style={{ textAlign: "center", marginBottom: "2rem" }}>Studio Sign In</h2>
+    <div className="page auth-page">
+      <div className="panel auth-panel">
+        <p className="eyebrow auth-eyebrow">Welcome Back</p>
+        <h2 className="auth-title">Studio Sign In</h2>
         
         {error && (
-          <div style={{ background: "var(--coral)", color: "#fff", padding: "1rem", borderRadius: "12px", marginBottom: "1.5rem", fontSize: "0.85rem" }}>
+          <div className="auth-error">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
+        <form onSubmit={handleSubmit} className="auth-form">
           <label>
             Email Address
             <input 
@@ -62,13 +62,13 @@ export default function LoginPage({ onLogin }: { onLogin: () => void }) {
               placeholder="••••••••"
             />
           </label>
-          <button className="cta" type="submit" disabled={loading} style={{ marginTop: "1rem" }}>
+          <button className="cta auth-submit" type="submit" disabled={loading}>
             {loading ? "Authenticating..." : "Enter Studio"}
           </button>
         </form>
         
-        <p style={{ marginTop: "2rem", textAlign: "center", fontSize: "0.9rem", color: "var(--muted)" }}>
-          New to the studio? <Link to="/register" style={{ color: "var(--navy)", fontWeight: "bold" }}>Apply for Access</Link>
+        <p className="auth-note">
+          New to the studio? <Link to="/register" className="auth-link">Apply for Access</Link>
         </p>
       </div>
     </div>

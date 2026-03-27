@@ -21,17 +21,17 @@ export default function LeaderboardSection({
           <h3>Who is running the comedy empire?</h3>
         </div>
       </div>
-      <div className="panel">
+      <div className="panel leaderboard-panel">
         <div className="leaderboard">
-          <div className="leaderboard-row header" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', fontWeight: 'bold', padding: '10px 0', borderBottom: '1px solid #333' }}>
+          <div className="leaderboard-row header">
             <span>Rank & Player</span>
             <span>Wins</span>
             <span>Tokens</span>
             <span>Best Streak</span>
           </div>
           {leaderboard.map((entry, index) => (
-            <div className="leaderboard-row" key={entry.id} style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', padding: '10px 0', borderBottom: '1px solid #222' }}>
-              <span>
+            <div className={`leaderboard-row${index < 3 ? " podium" : ""}`} key={entry.id}>
+              <span className="leaderboard-player">
                 <strong>#{index + 1}</strong> {entry.name}
               </span>
               <span>{entry.wins}</span>

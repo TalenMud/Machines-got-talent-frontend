@@ -39,16 +39,14 @@ export default function StageRoundSection({
   const handleBuzzer = (action: BuzzerAction) => {
     setLastAction(action)
     if (action !== 'hold') {
-      setPerformers((prev) =>
-        prev.map((performer, index) =>
-          index === activeIndex
-            ? {
-                ...performer,
-                score: Math.max(0, performer.score + buzzerScores[action]),
-              }
-            : performer,
-        ),
-      )
+      setPerformers((prev) => {
+        const next = [...prev] as typeof prev
+        next[activeIndex] = {
+          ...next[activeIndex],
+          score: Math.max(0, next[activeIndex].score + buzzerScores[action]),
+        }
+        return next
+      })
     }
 
     setActions((prev) => [

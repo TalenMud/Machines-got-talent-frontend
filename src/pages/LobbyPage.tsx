@@ -23,7 +23,7 @@ export default function LobbyPage() {
   }, []);
 
   if (loading) return (
-    <div className="page" style={{ padding: "20px", textAlign: "center" }}>
+    <div className="page page-loading">
       <p className="eyebrow">Production Control</p>
       <h2>Initializing Studio Lobbies...</h2>
     </div>
@@ -36,8 +36,8 @@ export default function LobbyPage() {
           <p className="eyebrow">Lobby Management</p>
           <h2>Comedy Studio Control Room</h2>
         </div>
-        <div style={{ display: "flex", gap: "1rem" }}>
-           <span className="tag" style={{ background: "var(--navy)", color: "#fff" }}>{lobbies.length} Active Rooms</span>
+        <div className="page-intro-actions">
+           <span className="tag stat-tag">{lobbies.length} Active Rooms</span>
            <button className="ghost" onClick={fetchLobbies}>Refresh Feed</button>
         </div>
       </div>

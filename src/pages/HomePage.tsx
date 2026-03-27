@@ -7,19 +7,22 @@ const quickLinks = [
     title: "Game Lobby",
     description: "Start or join a tournament room.",
     path: "/lobby",
-    color: "var(--teal)"
+    theme: "lobby",
+    icon: "🎮"
   },
   {
     title: "Rewards Shop",
     description: "Spend tokens on draft advantages.",
     path: "/rewards",
-    color: "var(--gold)"
+    theme: "rewards",
+    icon: "🎁"
   },
   {
     title: "Hall of Fame",
     description: "See the top AI agents and owners.",
     path: "/leaderboard",
-    color: "var(--navy)"
+    theme: "leaderboard",
+    icon: "🏆"
   }
 ]
 
@@ -30,7 +33,8 @@ export default function HomePage() {
   useEffect(() => {
     const fetchLobbies = async () => {
       try {
-        const lobbies = await apiFetch<any[]>("/lobby/list")
+        const response = await apiFetch<any>("/lobby/list")
+        const lobbies = Array.isArray(response) ? response : response?.lobbies ?? []
         setActiveLobbies(lobbies.length)
       } catch (err) {
         console.error("Failed to fetch active lobbies", err)
@@ -43,15 +47,10 @@ export default function HomePage() {
 
   return (
     <div className="page">
-      <section className="hero" style={{ 
-        padding: "3rem", 
-        minHeight: "auto", 
-        background: "linear-gradient(135deg, #fff8ee 0%, #f1fff9 100%)",
-        border: "1px solid var(--stroke)"
-      }}>
+      <section className="hero">
         <div className="hero-content">
           <div className="tag">Season 1: AI Rising</div>
-          <h2 style={{ marginTop: "1rem" }}>The AI Comedy Showdown</h2>
+          <h2 className="hero-title">The AI Comedy Showdown</h2>
           <p className="hero-subtitle">
             Draft your robotic comedian, sabotage your rivals, and judge the funniest 
             AI agents in the world's first tournament-style comedy game.
@@ -61,12 +60,12 @@ export default function HomePage() {
             <button className="ghost" onClick={() => navigate("/leaderboard")}>View Stats</button>
           </div>
         </div>
-        <div className="hero-stats" style={{ padding: "1.5rem" }}>
-           <div style={{ padding: "1rem", borderBottom: "1px solid var(--stroke)" }}>
+        <div className="hero-stats">
+           <div className="hero-stat-card">
              <p className="eyebrow">Active Shows</p>
              <p className="stat-value">{activeLobbies} LIVE</p>
            </div>
-           <div style={{ padding: "1rem" }}>
+           <div className="hero-stat-card hero-stat-card--prize">
              <p className="eyebrow">Prize Pool</p>
              <p className="stat-value">1.2M Tokens</p>
            </div>
@@ -80,11 +79,11 @@ export default function HomePage() {
         <div className="grid three">
           {quickLinks.map((link) => (
             <div 
-              className="panel link-card" 
+              className={`panel link-card quick-card quick-card--${link.theme}`} 
               key={link.path} 
               onClick={() => navigate(link.path)}
-              style={{ borderTop: `4px solid ${link.color}` }}
             >
+              <div className="quick-card-emoji" aria-hidden="true">{link.icon}</div>
               <h4>{link.title}</h4>
               <p className="card-sub">{link.description}</p>
               <span className="link-arrow">Enter →</span>
