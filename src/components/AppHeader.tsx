@@ -46,19 +46,32 @@ export default function AppHeader({ user, onLogout }: AppHeaderProps) {
 
       <div className="user-section">
         {user ? (
-          <div className="user-badge">
-            <div className="user-copy">
-               <span className="user-label">Signed in as</span>
-               <span className="user-name">{user.username}</span>
+          <>
+            <div className="stats-bar">
+              <div className="stats-pill">
+                <p className="eyebrow stats-label">Wins</p>
+                <p className="stats-value stats-value--wins">{user.win_count || 0}</p>
+              </div>
+              <div className="stats-pill">
+                <p className="eyebrow stats-label">Tokens</p>
+                <p className="stats-value stats-value--tokens">{user.balance || 0}</p>
+              </div>
             </div>
-            <div 
-              className="user-avatar"
-              onClick={handleLogout}
-              title="Click to Logout"
-            >
-              {user.username[0].toUpperCase()}
+
+            <div className="user-badge">
+              <div className="user-copy">
+                 <span className="user-label">Signed in as</span>
+                 <span className="user-name">{user.username}</span>
+              </div>
+              <div
+                className="user-avatar"
+                onClick={handleLogout}
+                title="Click to Logout"
+              >
+                {user.username[0].toUpperCase()}
+              </div>
             </div>
-          </div>
+          </>
         ) : (
           <Link to="/login" className="cta header-signin">Sign In</Link>
         )}

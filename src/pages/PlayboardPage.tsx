@@ -13,6 +13,7 @@ export default function PlayboardPage() {
   const [jokes, setJokes] = useState<Record<string, string>>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showLoading, setShowLoading] = useState(false);
+  const [showCalculationLoading, setShowCalculationLoading] = useState(false);
 
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
 
@@ -28,13 +29,13 @@ export default function PlayboardPage() {
         break;
       case "game:round_start":
         setShowLoading(true);
-        setTimeout(() => setShowLoading(false), 2000); // Transition effect
+        setTimeout(() => setShowLoading(false), 2000);
         setPhase("round");
         setJokes({});
         setGameState((prev: any) => ({ ...prev, ...lastMessage.data }));
         break;
       case "game:joke":
-        setJokes(prev => ({
+        setJokes((prev) => ({
           ...prev,
           [lastMessage.data.ai_id]: lastMessage.data.joke
         }));
@@ -43,8 +44,12 @@ export default function PlayboardPage() {
         setGameState((prev: any) => ({ ...prev, ...lastMessage.data }));
         break;
       case "game:end":
-        setPhase("finished");
-        setGameState((prev: any) => ({ ...prev, ...lastMessage.data }));
+        setShowCalculationLoading(true);
+        setTimeout(() => {
+          setShowCalculationLoading(false);
+          setPhase("finished");
+          setGameState((prev: any) => ({ ...prev, ...lastMessage.data }));
+        }, 3000);
         break;
     }
   }, [messages]);
@@ -69,10 +74,22 @@ export default function PlayboardPage() {
   if (showLoading) {
     return (
       <div className="page loading-page">
-         <div className="panel round-transition">
-            <h1 className="round-number">ROUND {gameState?.round}</h1>
-            <p className="eyebrow">The Spotlight is moving...</p>
-         </div>
+        <div className="panel round-transition">
+          <h1 className="round-number">ROUND {gameState?.round}</h1>
+          <p className="eyebrow">The Spotlight is moving...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (showCalculationLoading) {
+    return (
+      <div className="page loading-page">
+        <div className="panel spotlight calculation-transition">
+          <div className="calculation-icon">⚙️</div>
+          <h2 className="calculation-title">Calculating Results</h2>
+          <p className="eyebrow calculation-note">Finalizing Token Payouts & Win Counts...</p>
+        </div>
       </div>
     );
   }
@@ -87,8 +104,8 @@ export default function PlayboardPage() {
           </h2>
         </div>
         <div className="page-intro-actions">
-           <span className="tag phase-tag">{phase}</span>
-           {isMyTurn && phase === "draft" && <span className="tag turn-tag">Your Turn</span>}
+          <span className="tag phase-tag">{phase}</span>
+          {isMyTurn && phase === "draft" && <span className="tag turn-tag">Your Turn</span>}
         </div>
       </div>
 
@@ -96,14 +113,14 @@ export default function PlayboardPage() {
         <section className="section draft-stage">
           <div className="grid three">
             {aiList.map((ai: any) => {
-               const picks = gameState?.picks || {};
-               const isPicked = Object.values(picks).includes(ai.id);
-               const ownerID = Object.entries(picks).find(([, aid]) => aid === ai.id)?.[0];
-               const isSelected = selectedId === ai.id;
+              const picks = gameState?.picks || {};
+              const isPicked = Object.values(picks).includes(ai.id);
+              const ownerID = Object.entries(picks).find(([, aid]) => aid === ai.id)?.[0];
+              const isSelected = selectedId === ai.id;
 
-               return (
-                <article 
-                  key={ai.id} 
+              return (
+                <article
+                  key={ai.id}
                   className={`panel comedian draft-card ${isPicked ? "eliminated" : ""} ${isSelected ? "selected" : ""}`}
                   onClick={() => !isPicked && setSelectedId(ai.id)}
                 >
@@ -120,9 +137,7 @@ export default function PlayboardPage() {
                       {isPicked ? "Claimed" : "Ready"}
                     </span>
                   </div>
-                  <p className="bio draft-card-bio">
-                    {ai.bio}
-                  </p>
+                  <p className="bio draft-card-bio">{ai.bio}</p>
                   <div className="row draft-card-meta">
                     <span className="streak">Streak {ai.streak || 0}</span>
                     <span className={`pick-tag ${isSelected ? "active" : ""}`}>
@@ -132,12 +147,15 @@ export default function PlayboardPage() {
                   <button
                     className="cta full-width draft-claim"
                     disabled={!isMyTurn || isPicked || !isSelected}
-                    onClick={(e) => { e.stopPropagation(); handleDraftPick(ai.id); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDraftPick(ai.id);
+                    }}
                   >
                     {isPicked ? "Claimed" : "Claim Agent"}
                   </button>
                 </article>
-               );
+              );
             })}
           </div>
         </section>
@@ -147,49 +165,59 @@ export default function PlayboardPage() {
         <section className="section">
           <div className="grid two">
             {gameState?.matchups?.map((m: any, idx: number) => {
-               const ai1 = aiList.find((a: any) => a.id === m.ai1);
-               const ai2 = aiList.find((a: any) => a.id === m.ai2);
-               
-               const renderCompetitor = (ai: any) => {
-                 if (!ai) return <div className="performer-card spotlight performer-card--bye"><p className="vs">Bye</p></div>;
-                 const isMyAI = ai.id === myAIID;
-                 
-                 return (
-                   <div className={`performer-card round-performer ${isMyAI ? "hold mine" : ""}`}>
-                     {isMyAI && <div className="tag performer-lock">Locked</div>}
-                     <div className="performer-header">
-                        <div className="avatar performer-avatar" style={{ background: ai.color }}>🤖</div>
-                        <div>
-                           <p className="card-title performer-name">{ai.name}</p>
-                           <p className="card-sub performer-style">{ai.personality}</p>
-                        </div>
-                     </div>
-                     <div className="joke-box">
-                        <p className="joke">{jokes[ai.id] || <span className="joke-placeholder">Thinking of a punchline...</span>}</p>
-                     </div>
-                     <div className="row performer-actions">
-                        <button
-                           className="buzzer bad match-buzzer"
-                           onClick={() => handleVote(ai.id, "buzzer")} 
-                           disabled={isMyAI}>BUZZ</button>
-                        <button
-                           className="buzzer golden match-buzzer"
-                           onClick={() => handleVote(ai.id, "golden_buzzer")} 
-                           disabled={isMyAI}>GOLDEN</button>
-                     </div>
-                   </div>
-                 );
-               };
+              const ai1 = aiList.find((a: any) => a.id === m.ai1);
+              const ai2 = aiList.find((a: any) => a.id === m.ai2);
 
-               return (
-                 <div key={idx} className="panel round-match-card">
-                    <div className="round-match">
-                       {renderCompetitor(ai1)}
-                       <div className="round-vs">VS</div>
-                       {renderCompetitor(ai2)}
+              const renderCompetitor = (ai: any) => {
+                if (!ai) return <div className="performer-card spotlight performer-card--bye"><p className="vs">Bye</p></div>;
+                const isMyAI = ai.id === myAIID;
+
+                return (
+                  <div className={`performer-card round-performer ${isMyAI ? "hold mine" : ""}`}>
+                    {isMyAI && <div className="tag performer-lock">Your Agent</div>}
+                    <div className="performer-header">
+                      <div className="avatar performer-avatar" style={{ background: ai.color }}>🤖</div>
+                      <div>
+                        <p className="card-title performer-name">{ai.name}</p>
+                        <p className="card-sub performer-style">{ai.personality}</p>
+                      </div>
                     </div>
-                 </div>
-               );
+                    <div className="joke-box">
+                      <p className="joke">{jokes[ai.id] || <span className="joke-placeholder">Thinking of a punchline...</span>}</p>
+                    </div>
+                    <div className="row performer-actions">
+                      {isMyAI ? (
+                        <div className="performer-status-note">Voting Restricted</div>
+                      ) : (
+                        <>
+                          <button
+                            className="buzzer bad match-buzzer"
+                            onClick={() => handleVote(ai.id, "buzzer")}
+                          >
+                            BUZZ
+                          </button>
+                          <button
+                            className="buzzer golden match-buzzer"
+                            onClick={() => handleVote(ai.id, "golden_buzzer")}
+                          >
+                            GOLDEN
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              };
+
+              return (
+                <div key={idx} className="panel round-match-card">
+                  <div className="round-match">
+                    {renderCompetitor(ai1)}
+                    <div className="round-vs">VS</div>
+                    {renderCompetitor(ai2)}
+                  </div>
+                </div>
+              );
             })}
           </div>
         </section>
@@ -198,21 +226,21 @@ export default function PlayboardPage() {
       {phase === "finished" && (
         <section className="section winner-section">
           <div className="panel spotlight winner-panel">
-             <div className="winner-icon">🏆</div>
-             <p className="eyebrow winner-label">THE FINAL WINNER</p>
-             <h2 className="winner-name">{aiList.find((a: any) => a.id === gameState?.winner_ai)?.name}</h2>
-             <p className="card-sub winner-subtitle">{aiList.find((a: any) => a.id === gameState?.winner_ai)?.personality}</p>
-             
-             <div className="row winner-summary">
-                <div>
-                   <p className="eyebrow">Champion Owner</p>
-                   <p className="meta-value winner-value">{gameState?.winner_player === currentUser.id ? "YOU" : (gameState?.winner_player || "N/A")}</p>
-                </div>
-                <div>
-                   <p className="eyebrow">Payout</p>
-                   <p className="meta-value winner-value winner-payout">+{gameState?.token_deltas?.[currentUser.id] || 0} Tokens</p>
-                </div>
-             </div>
+            <div className="winner-icon">🏆</div>
+            <p className="eyebrow winner-label">The Final Winner</p>
+            <h2 className="winner-name">{aiList.find((a: any) => a.id === gameState?.winner_ai)?.name}</h2>
+            <p className="card-sub winner-subtitle">{aiList.find((a: any) => a.id === gameState?.winner_ai)?.personality}</p>
+
+            <div className="row winner-summary">
+              <div>
+                <p className="eyebrow">Champion Owner</p>
+                <p className="meta-value winner-value">{gameState?.winner_player === currentUser.id ? "YOU" : (gameState?.winner_player || "N/A")}</p>
+              </div>
+              <div>
+                <p className="eyebrow">Payout</p>
+                <p className="meta-value winner-value winner-payout">+{gameState?.token_deltas?.[currentUser.id] || 0} Tokens</p>
+              </div>
+            </div>
           </div>
           <button className="cta winner-cta" onClick={() => navigate("/lobby")}>Return to Lobby</button>
         </section>

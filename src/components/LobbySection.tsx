@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
-import { apiFetch } from "../api/client";
 import { useNavigate } from "react-router-dom";
+import { apiFetch } from "../api/client";
 
 type LobbySectionProps = {
   initialLobbies: any[]
@@ -56,6 +56,9 @@ export default function LobbySection({
           password: draft.password,
         }),
       });
+      
+      // Update local lobbies list so selectedLobby works immediately
+      setLobbies(prev => [response, ...prev]);
       setSelectedLobbyCode(response.code);
       setActivity("Lobby created: " + response.code);
       if (onRefresh) onRefresh();
